@@ -1,10 +1,13 @@
+# matplotlib==3.2.2
+# numpy==1.19.3
+# pandas==1.1.4
+
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import requests
 import seaborn as sns
 import warnings
-
 import statsmodels.formula.api as smf
 
 warnings.filterwarnings(action='once')
@@ -22,9 +25,6 @@ params = {'legend.fontsize': med,
 plt.rcParams.update(params)
 plt.style.use('seaborn-whitegrid')
 sns.set_style("white")
-# %matplotlib inline
-
-# Version
 
 if __name__ == '__main__':
     # parse
@@ -45,7 +45,6 @@ if __name__ == '__main__':
     base['ИМТ'] = base.um1 / (base.um2 * base.um2 / 10000)
     base['Логарифм'] = np.log(base.uj10)
     base.columns = ['Вес', 'Рост', 'З/п', 'Возраст', 'Пол', 'Тип', 'ИМТ', 'Логарифм_зп']
-
 
     # circle diagrams
     def int_info(mur):
@@ -70,7 +69,6 @@ if __name__ == '__main__':
             ]
         })
 
-
     def circle_diag(meow, title):
         fig, ax = plt.subplots(figsize=(12, 7), subplot_kw=dict(aspect="equal"), dpi=80)
         data = meow['Количество пипл']
@@ -91,7 +89,6 @@ if __name__ == '__main__':
         ax.legend(wedges, categories, title="Вердикт", loc="center left", bbox_to_anchor=(1, 0, 0.5, 1))
         plt.setp(autotexts, size=10, weight=700)
         ax.set_title("Состояние телосложения среди опрошенных " + title)
-
 
     male = base[['Пол', 'ИМТ']][base.Пол == 1]
     fem = base[['Пол', 'ИМТ']][base.Пол == 2]
@@ -132,13 +129,11 @@ if __name__ == '__main__':
     plt.ylabel("Количество опрошенных")
     plt.xticks(ticks=bins[::1], labels=[round(b, 1) for b in bins[::1]])
 
-
     # multi param plots
     def semidata(num):
         plt.plot(last[last['Тип'] == num].groupby(x_var).mean().index, 'ИМТ',
                  data=last[last['Тип'] == num].groupby(x_var).mean()
                  )
-
 
     last['Лока'] = 'Областной центр'
     last.loc[last.Тип == 2, 'Лока'] = 'Город'
@@ -155,6 +150,7 @@ if __name__ == '__main__':
     plt.title("Кореляция ИМТ от возраста в зависимости от локации", fontsize=22)
     plt.xticks(ticks=bins[::1], labels=[round(b, 1) for b in bins[::1]],
                horizontalalignment='center')
+    plt.ylabel("Средний ИМТ")
+    plt.xlabel("Возраст")
     plt.grid()
     plt.show()
-
