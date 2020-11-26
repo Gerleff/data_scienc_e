@@ -44,10 +44,10 @@ if __name__ == '__main__':
                 (base.u_age <= 72)]
     base['ИМТ'] = base.um1 / (base.um2 * base.um2 / 10000)
     base['Логарифм'] = np.log(base.uj10)
-    base.columns = ['Вес', 'Рост', 'З/п', 'Возраст', 'Пол', 'Тип', 'ИМТ', 'Логарифм_зп']
+    base.columns = ['Вес', 'Рост', 'З/п', 'Возраст', 'Пол', 'Тип местности', 'ИМТ', 'Логарифм_зп']
 
     # circle diagrams
-    def int_info(mur):
+    def int_info(ddb):
         return pd.DataFrame({
             'Телосложение': [
                 'Выраженный дефицит массы',
@@ -58,21 +58,21 @@ if __name__ == '__main__':
                 'Ожирение резкое',
                 'Очень резкое ожирение'
             ],
-            'Количество пипл': [
-                mur['ИМТ'][mur['ИМТ'] < 16.0].count(),
-                mur['ИМТ'][(mur['ИМТ'] < 18.5) & (mur['ИМТ'] >= 16.0)].count(),
-                mur['ИМТ'][(mur['ИМТ'] < 25.0) & (mur['ИМТ'] >= 18.5)].count(),
-                mur['ИМТ'][(mur['ИМТ'] < 30.0) & (mur['ИМТ'] >= 25.0)].count(),
-                mur['ИМТ'][(mur['ИМТ'] < 35.0) & (mur['ИМТ'] >= 30.0)].count(),
-                mur['ИМТ'][(mur['ИМТ'] < 40.0) & (mur['ИМТ'] >= 35.0)].count(),
-                mur['ИМТ'][mur['ИМТ'] >= 40.0].count()
+            'Количество людей': [
+                ddb['ИМТ'][ddb['ИМТ'] < 16.0].count(),
+                ddb['ИМТ'][(ddb['ИМТ'] < 18.5) & (ddb['ИМТ'] >= 16.0)].count(),
+                ddb['ИМТ'][(ddb['ИМТ'] < 25.0) & (ddb['ИМТ'] >= 18.5)].count(),
+                ddb['ИМТ'][(ddb['ИМТ'] < 30.0) & (ddb['ИМТ'] >= 25.0)].count(),
+                ddb['ИМТ'][(ddb['ИМТ'] < 35.0) & (ddb['ИМТ'] >= 30.0)].count(),
+                ddb['ИМТ'][(ddb['ИМТ'] < 40.0) & (ddb['ИМТ'] >= 35.0)].count(),
+                ddb['ИМТ'][ddb['ИМТ'] >= 40.0].count()
             ]
         })
 
-    def circle_diag(meow, title):
+    def circle_diag(db, title):
         fig, ax = plt.subplots(figsize=(12, 7), subplot_kw=dict(aspect="equal"), dpi=80)
-        data = meow['Количество пипл']
-        categories = meow['Телосложение']
+        data = db['Количество людей']
+        categories = db['Телосложение']
         explode = [0, 0, 0, 0, 0, 0, 0]
 
         def func(pct, allvals):
@@ -97,8 +97,8 @@ if __name__ == '__main__':
 
     # regression
     regress = base[['Логарифм_зп', 'ИМТ', 'Возраст']]
-    regress.loc['ИМТ'] = regress['ИМТ'] ** 2
-    regress.loc['Возраст'] = regress['Возраст'] ** 2
+    regress['ИМТ'] = regress['ИМТ'] ** 2
+    regress['Возраст'] = regress['Возраст'] ** 2
 
     model1 = smf.ols(formula='Логарифм_зп ~ ИМТ + Возраст', data=regress).fit()
     # sns.lmplot('Возраст', 'ИМТ', hue='Логарифм_зп', data=regress)
@@ -106,7 +106,7 @@ if __name__ == '__main__':
     print(model1.summary())
 
     # Histogram
-    last = base[['ИМТ', 'Возраст', 'Пол', 'Тип']]
+    last = base[['ИМТ', 'Возраст', 'Пол', 'Тип местности']]
     last['Телосложение'] = 'Выраженный дефицит массы'
     last.loc[last.ИМТ >= 16.0, 'Телосложение'] = 'Недостаточная масса тела'
     last.loc[last.ИМТ >= 18.5, 'Телосложение'] = 'Норма'
@@ -131,22 +131,22 @@ if __name__ == '__main__':
 
     # multi param plots
     def semidata(num):
-        plt.plot(last[last['Тип'] == num].groupby(x_var).mean().index, 'ИМТ',
-                 data=last[last['Тип'] == num].groupby(x_var).mean()
+        plt.plot(last[last['Тип местности'] == num].groupby(x_var).mean().index, 'ИМТ',
+                 data=last[last['Тип местности'] == num].groupby(x_var).mean()
                  )
 
-    last['Лока'] = 'Областной центр'
-    last.loc[last.Тип == 2, 'Лока'] = 'Город'
-    last.loc[last.Тип == 3, 'Лока'] = 'ПГТ'
-    last.loc[last.Тип == 4, 'Лока'] = 'Село'
+    last['Локация'] = 'Областной центр'
+    last.loc[last['Тип местности'] == 2, 'Локация'] = 'Город'
+    last.loc[last['Тип местности'] == 3, 'Локация'] = 'ПГТ'
+    last.loc[last['Тип местности'] == 4, 'Локация'] = 'Село'
 
-    df_agg = last.loc[:, ['Возраст', 'Лока']].groupby('Лока')
+    df_agg = last.loc[:, ['Возраст', 'Локация']].groupby('Локация')
     vals = [last['Возраст'].values.tolist() for i, last in df_agg]
     colors = [plt.cm.Spectral(i / float(len(vals) - 1)) for i in range(len(vals))]
     plt.figure(figsize=(16, 9), dpi=80)
     for i in range(4):
         semidata(float(i + 1))
-    plt.legend({group: col for group, col in zip(np.unique(last['Лока']).tolist(), colors[:len(vals)])})
+    plt.legend({group: col for group, col in zip(np.unique(last['Локация']).tolist(), colors[:len(vals)])})
     plt.title("Кореляция ИМТ от возраста в зависимости от локации", fontsize=22)
     plt.xticks(ticks=bins[::1], labels=[round(b, 1) for b in bins[::1]],
                horizontalalignment='center')
